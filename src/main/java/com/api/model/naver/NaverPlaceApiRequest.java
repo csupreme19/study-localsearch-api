@@ -1,6 +1,6 @@
 package com.api.model.naver;
 
-import java.util.List;
+import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -8,10 +8,10 @@ import lombok.Data;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class NaverPlaceApiResponse {
-	String lastBuildDate;
-	Integer total;
-	Integer start;
+public class NaverPlaceApiRequest {
+	@NotNull
+	String query;
 	Integer display;
-	List<ItemInfo> items;
+	Integer start;
+	String sort;
 }

@@ -20,8 +20,8 @@ public class ApiKeyInfo {
 	private Long id;
 	private Long companyId;
 	private String key;
-	private String client_id;
-	private String client_secret;
+	private String clientId;
+	private String clientSecret;
 	private Date createdAt;
 	private Date modifiedAt;
 	
