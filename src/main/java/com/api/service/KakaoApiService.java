@@ -2,8 +2,8 @@ package com.api.service;
 
 import org.springframework.stereotype.Service;
 
-import com.api.model.KakaoPlaceApiRequest;
-import com.api.model.kakao.KakaoResponse;
+import com.api.model.kakao.KakaoPlaceApiRequest;
+import com.api.model.kakao.KakaoPlaceApiResponse;
 
 import reactor.core.publisher.Mono;
 
@@ -19,5 +19,5 @@ public interface KakaoApiService {
 	/**
 	 * 장소 검색 API 비동기 호출
 	 */
-	public Mono<KakaoResponse> getKakaoPlaces(KakaoPlaceApiRequest request);
+	public Mono<KakaoPlaceApiResponse> getKakaoPlaces(KakaoPlaceApiRequest request);
 }

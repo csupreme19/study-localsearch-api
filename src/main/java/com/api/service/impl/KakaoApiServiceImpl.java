@@ -9,10 +9,10 @@ import org.springframework.util.MultiValueMap;
 
 import com.api.constants.ApiEndpoints;
 import com.api.constants.ApiHosts;
-import com.api.model.KakaoPlaceApiRequest;
 import com.api.model.db.ApiKeyInfo;
 import com.api.model.db.CompanyInfo;
-import com.api.model.kakao.KakaoResponse;
+import com.api.model.kakao.KakaoPlaceApiRequest;
+import com.api.model.kakao.KakaoPlaceApiResponse;
 import com.api.repositories.CompanyRepository;
 import com.api.service.KakaoApiService;
 import com.api.utils.ObjectMapperUtil;
@@ -30,7 +30,7 @@ public class KakaoApiServiceImpl implements KakaoApiService {
 	
 	@Transactional
 	@Override
-	public Mono<KakaoResponse> getKakaoPlaces(KakaoPlaceApiRequest request) {
+	public Mono<KakaoPlaceApiResponse> getKakaoPlaces(KakaoPlaceApiRequest request) {
 		String url = ApiHosts.KAKAO.getUrl() + ApiEndpoints.KAKAO_LOCAL_SEARCH;
 		CompanyInfo companyInfo = companyRepo.findOneByName(ApiHosts.KAKAO.name().toLowerCase());
 		ApiKeyInfo apiKeyInfo = companyInfo.getApiKey();
@@ -38,8 +38,8 @@ public class KakaoApiServiceImpl implements KakaoApiService {
 		MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
 		headers.add(HttpHeaders.AUTHORIZATION, "KakaoAK " + apiKeyInfo.getKey());
 		MultiValueMap<String, String> params = ObjectMapperUtil.parseMap(request);
-		Mono<KakaoResponse> response = WebClientUtil.get(url, headers, params)
-				.bodyToMono(KakaoResponse.class);
+		Mono<KakaoPlaceApiResponse> response = WebClientUtil.get(url, headers, params)
+				.bodyToMono(KakaoPlaceApiResponse.class);
 		return response;
 	}
 

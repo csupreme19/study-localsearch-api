@@ -11,7 +11,7 @@ import lombok.Data;
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class KakaoResponse {
+public class KakaoPlaceApiResponse {
 	MetaInfo meta;
 	List<DocumentInfo> documents;
 }
