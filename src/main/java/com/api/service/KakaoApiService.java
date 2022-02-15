@@ -1,6 +1,7 @@
 package com.api.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.MultiValueMap;
 
 import com.api.model.kakao.KakaoPlaceApiRequest;
 import com.api.model.kakao.KakaoPlaceApiResponse;
@@ -19,5 +20,5 @@ public interface KakaoApiService {
 	/**
 	 * 장소 검색 API 비동기 호출
 	 */
-	public Mono<KakaoPlaceApiResponse> getKakaoPlaces(KakaoPlaceApiRequest request);
+	public Mono<KakaoPlaceApiResponse> getKakaoPlaces(MultiValueMap<String, String> header, KakaoPlaceApiRequest request);
 }

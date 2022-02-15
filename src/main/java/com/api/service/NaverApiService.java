@@ -1,6 +1,7 @@
 package com.api.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.MultiValueMap;
 
 import com.api.model.naver.NaverPlaceApiRequest;
 import com.api.model.naver.NaverPlaceApiResponse;
@@ -19,5 +20,5 @@ public interface NaverApiService {
 	/**
 	 * 장소 검색 API 비동기 호출
 	 */
-	public Mono<NaverPlaceApiResponse> getNaverPlaces(NaverPlaceApiRequest request);
+	public Mono<NaverPlaceApiResponse> getNaverPlaces(MultiValueMap<String, String> header, NaverPlaceApiRequest request);
 }

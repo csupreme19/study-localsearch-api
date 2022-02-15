@@ -9,7 +9,7 @@ import lombok.Data;
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class NaverPlaceApiRequest {
-	@NotNull
+	@NotNull(message = "{validation.message.notnull}")
 	String query;
 	Integer display;
 	Integer start;

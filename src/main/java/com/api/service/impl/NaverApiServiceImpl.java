@@ -1,10 +1,12 @@
 package com.api.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.ObjectUtils;
 
 import com.api.constants.ApiEndpoints;
 import com.api.constants.ApiHosts;
@@ -29,16 +31,18 @@ public class NaverApiServiceImpl implements NaverApiService {
 	
 	@Transactional
 	@Override
-	public Mono<NaverPlaceApiResponse> getNaverPlaces(NaverPlaceApiRequest request) {
+	public Mono<NaverPlaceApiResponse> getNaverPlaces(MultiValueMap<String, String> header, NaverPlaceApiRequest request) {
 		String url = ApiHosts.NAVER.getUrl() + ApiEndpoints.NAVER_LOCAL_SEARCH;
 		CompanyInfo companyInfo = companyRepo.findOneByName(ApiHosts.NAVER.name().toLowerCase());
 		ApiKeyInfo apiKeyInfo = companyInfo.getApiKey();
 		
-		MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
-		headers.add("X-Naver-Client-Id", apiKeyInfo.getClientId());
-		headers.add("X-Naver-Client-Secret", apiKeyInfo.getClientSecret());
+		if(!ObjectUtils.isEmpty(header)) {
+			header = new LinkedMultiValueMap<>();
+		}
+		header.add("X-Naver-Client-Id", apiKeyInfo.getClientId());
+		header.add("X-Naver-Client-Secret", apiKeyInfo.getClientSecret());
 		MultiValueMap<String, String> params = ObjectMapperUtil.parseMap(request);
-		Mono<NaverPlaceApiResponse> response = WebClientUtil.get(url, headers, params)
+		Mono<NaverPlaceApiResponse> response = WebClientUtil.get(url, header, params)
 				.bodyToMono(NaverPlaceApiResponse.class);
 		return response;
 	}
