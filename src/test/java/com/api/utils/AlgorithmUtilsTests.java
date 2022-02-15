@@ -22,4 +22,19 @@ public class AlgorithmUtilsTests {
 			assertTrue(flag);
 		}
 	}
+	
+	@Test
+	public void printAlgorithm() {
+		String kakaoRoadAddress = "경기 수원시 팔달구 장다리로 282";
+		String naverRoadAddress = "경기도 수원시 팔달구 장다리로 282 의성빌딩";
+		int maxAddressLen = Math.max(kakaoRoadAddress.length(), naverRoadAddress.length());
+		int distance = AlgorithmUtils.levinshteinDistance("경기도 수원시 팔달구 장다리로 282 의성빌딩", "경기 수원시 팔달구 장다리로 282");
+		double percent = ((double)distance / (double)maxAddressLen);
+		if(percent <= 0.25) {
+			log.info("consider same: {} == {} ({}%)", kakaoRoadAddress, naverRoadAddress, (int)(percent * 100));
+		}
+		
+		log.info("distance: {}", distance);
+		assertTrue(true);
+	}
 }

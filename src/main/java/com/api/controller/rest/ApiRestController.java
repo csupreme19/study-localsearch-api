@@ -41,11 +41,11 @@ public class ApiRestController {
 	 * 
 	 * 카카오 검색 API, 네이버 검색 API 호출하여 각각 5개의 장소를 가져와 10개로 보여준다.
 	 */
-	@GetMapping(path = "/place")
+	@GetMapping(path = "/places")
 	public ResponseEntity<?> getPlaces(@RequestHeader MultiValueMap<String, String> header, @Valid PlaceApiRequest request) {
 		GenericMessage msg = new GenericMessage();
 		msg.setResult(apiService.getPlaces(header, request));
-		return null;
+		return new ResponseEntity<>(msg, HttpStatus.OK);
 	}
 	
 	// 테스트

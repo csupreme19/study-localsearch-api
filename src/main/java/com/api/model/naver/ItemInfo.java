@@ -8,7 +8,7 @@ import lombok.Data;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ItemInfo {
 	String title;
-	String linke;
+	String link;
 	String category;
 	String description;
 	String telephone;

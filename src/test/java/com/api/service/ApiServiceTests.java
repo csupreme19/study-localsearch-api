@@ -16,7 +16,9 @@ public class ApiServiceTests {
 
 	private String[] testAddress = {"인천광역시 중구 은하수로 1"
 			, "강원도 강릉시 강릉대로587번길 10-5"
-			, "서울특별시 성동구 성수동1가 668-21"};
+			, "서울특별시 성동구 성수동1가 668-21"
+			, "경기 수원시 팔달구 장다리로 282"
+			, "경기도 수원시 팔달구 장다리로 282 의성빌딩"};
 	
 	private String addressPattern = RegexPatterns.ADDRESS.getPattern();
 	

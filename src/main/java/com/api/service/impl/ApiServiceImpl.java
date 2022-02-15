@@ -1,22 +1,36 @@
 package com.api.service.impl;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import com.api.constants.RegexPatterns;
 import com.api.model.PlaceApiRequest;
 import com.api.model.PlaceApiResponse;
+import com.api.model.PlaceInfo;
+import com.api.model.kakao.DocumentInfo;
 import com.api.model.kakao.KakaoPlaceApiRequest;
 import com.api.model.kakao.KakaoPlaceApiResponse;
+import com.api.model.naver.ItemInfo;
 import com.api.model.naver.NaverPlaceApiRequest;
 import com.api.model.naver.NaverPlaceApiResponse;
 import com.api.service.ApiService;
 import com.api.service.KakaoApiService;
 import com.api.service.NaverApiService;
+import com.api.utils.AlgorithmUtils;
 
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Service
 public class ApiServiceImpl implements ApiService {
 
@@ -33,21 +47,104 @@ public class ApiServiceImpl implements ApiService {
 	public PlaceApiResponse getPlaces(MultiValueMap<String, String> header, PlaceApiRequest request) {
 		KakaoPlaceApiRequest kakaoRequest = new KakaoPlaceApiRequest();
 		kakaoRequest.setQuery(request.getQuery());
+		kakaoRequest.setSize("5");
 		Mono<KakaoPlaceApiResponse> kakaoResponse = kakaoService.getKakaoPlaces(header, kakaoRequest);
 
 		NaverPlaceApiRequest naverRequest = new NaverPlaceApiRequest();
 		naverRequest.setQuery(request.getQuery());
+		naverRequest.setDisplay(5);
 		Mono<NaverPlaceApiResponse> naverResponse = naverService.getNaverPlaces(header, naverRequest);
 
 		KakaoPlaceApiResponse kakaoResult = kakaoResponse.block();
 		NaverPlaceApiResponse naverResult = naverResponse.block();
 
-		// 도로명 주소를 기준으로 정렬한다.
+		List<PlaceInfo> places = new ArrayList<>();
+		Set<String> kakaoSet = new HashSet<>();
+		Set<String> naverSet = new HashSet<>();
 
+		for(DocumentInfo kakaoItem : kakaoResult.getDocuments()) {
+			String kakaoAddress = kakaoItem.getAddressName();	// 카카오 동주소
+			String kakaoRoadAddress = kakaoItem.getRoadAddressName();	// 카카오 도로명주소
 
+			// 주소값이 없거나 패턴이 모두 맞지 않으면 무효
+			if(!Pattern.matches(addressRegex, kakaoAddress) && !Pattern.matches(addressRegex, kakaoRoadAddress)) continue;
+			if(!Pattern.matches(addressRegex, kakaoAddress)) kakaoItem.setAddressName("");
+			if(!Pattern.matches(addressRegex, kakaoRoadAddress)) kakaoItem.setRoadAddressName("");
 
-		naverResponse.block();
+			for(ItemInfo naverItem : naverResult.getItems()) {
+				String naverAddress = naverItem.getAddress();	// 네이버 동주소
+				String naverRoadAddress = naverItem.getRoadAddress();	// 네이버 도로명주소
+
+				// 주소값이 없거나 패턴이 모두 맞지 않으면 무효
+				if(!Pattern.matches(addressRegex, kakaoAddress) && !Pattern.matches(addressRegex, kakaoRoadAddress)) continue;
+				if(!Pattern.matches(addressRegex, kakaoAddress)) kakaoItem.setAddressName("");
+				if(!Pattern.matches(addressRegex, kakaoRoadAddress)) kakaoItem.setRoadAddressName("");
+
+				int maxAddressLen =  Math.max(kakaoAddress.length(), naverAddress.length());
+				int maxRoadAddressLen =  Math.max(kakaoRoadAddress.length(), naverRoadAddress.length());
+
+				int addressDistance = maxAddressLen;
+				int roadAddressDistance = maxRoadAddressLen;
+
+				// 동주소 비교
+				if(!ObjectUtils.isEmpty(kakaoAddress) && !ObjectUtils.isEmpty(naverAddress)) {
+					addressDistance = AlgorithmUtils.levinshteinDistance(StringUtils.trimAllWhitespace(kakaoAddress), StringUtils.trimAllWhitespace(naverAddress));
+				}
+				// 도로명주소 비교
+				if(!ObjectUtils.isEmpty(kakaoRoadAddress) && !ObjectUtils.isEmpty(naverRoadAddress)) {
+					roadAddressDistance = AlgorithmUtils.levinshteinDistance(StringUtils.trimAllWhitespace(kakaoRoadAddress), StringUtils.trimAllWhitespace(naverRoadAddress));
+				}
+
+				// 동주소나 도로명 주소의 문자열 차이가 30%이하일 때 동일하다고 가정
+				if(((double)addressDistance / (double)maxAddressLen) <= 0.3
+						|| ((double)roadAddressDistance / (double)maxRoadAddressLen) <= 0.3) {
+					// 모든 정보는 카카오 기준
+					PlaceInfo place = new PlaceInfo();
+					place.setAddress(kakaoAddress);
+					place.setCategory(kakaoItem.getCategoryName());
+					place.setName(kakaoItem.getPlaceName());
+					place.setPhone(kakaoItem.getPhone());
+					place.setRoadAddress(kakaoRoadAddress);
+					place.setUrl(kakaoItem.getPlaceUrl());
+					places.add(place);
+					
+					log.info("공통 음식점: {}", place.toString());
+					
+					// 이미 검색되었는지는 해시테이블에 저장하여 사용
+					kakaoSet.add(kakaoItem.getPlaceName());
+					naverSet.add(naverItem.getTitle());
+				}
+			}
+		}
+
+		// 공통이 아닌 카카오 조회 결과
+		for(DocumentInfo kakaoItem : kakaoResult.getDocuments()) {
+			if(kakaoSet.contains(kakaoItem.getPlaceName())) continue;
+			PlaceInfo place = new PlaceInfo();
+			place.setAddress(kakaoItem.getAddressName());
+			place.setCategory(kakaoItem.getCategoryName());
+			place.setName(kakaoItem.getPlaceName());
+			place.setPhone(kakaoItem.getPhone());
+			place.setRoadAddress(kakaoItem.getRoadAddressName());
+			place.setUrl(kakaoItem.getPlaceUrl());
+			places.add(place);
+		}
+		
+		// 공통이 아닌 네이버 조회 결과
+		for(ItemInfo naverItem : naverResult.getItems()) {
+			if(naverSet.contains(naverItem.getTitle())) continue;
+			PlaceInfo place = new PlaceInfo();
+			place.setAddress(naverItem.getAddress());
+			place.setCategory(naverItem.getCategory());
+			place.setName(naverItem.getTitle());
+			place.setPhone(naverItem.getTelephone());
+			place.setRoadAddress(naverItem.getRoadAddress());
+			place.setUrl(naverItem.getLink());
+			places.add(place);
+		}
+
 		PlaceApiResponse response = new PlaceApiResponse();
+		response.setPlaces(places);
 
 		return response;
 	}

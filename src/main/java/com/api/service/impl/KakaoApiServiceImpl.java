@@ -40,7 +40,6 @@ public class KakaoApiServiceImpl implements KakaoApiService {
 			header = new LinkedMultiValueMap<>();
 		}
 		header.add(HttpHeaders.AUTHORIZATION, "KakaoAK " + apiKeyInfo.getKey());
-		log.info("HEADERS ::: {}", header.get("Authorization"));
 		MultiValueMap<String, String> params = ObjectMapperUtil.parseMap(request);
 		Mono<KakaoPlaceApiResponse> response = WebClientUtil.get(url, header, params)
 				.bodyToMono(KakaoPlaceApiResponse.class);
