@@ -31,6 +31,27 @@ public class ExternalRestControllerTests {
 	private WebTestClient webTestClient;
 	
 	@Test
+	public void isApiNotFound() {
+		webTestClient.get()
+		.uri(uriBuilder -> uriBuilder.path("/notexists")
+				.queryParam("query", "갈비집")
+				.queryParam("size", 5)
+				.build())
+		.exchange()
+		.expectStatus().isNotFound();
+	}
+	
+	@Test
+	public void isKakaoPlaceApiBadRequest() {
+		webTestClient.get()
+		.uri(uriBuilder -> uriBuilder.path("/external/kakao/search")
+				.queryParam("size", 5)
+				.build())
+		.exchange()
+		.expectStatus().isBadRequest();
+	}
+	
+	@Test
 	public void isKakaoPlaceApiSuccess() {
 		webTestClient.get()
 		.uri(uriBuilder -> uriBuilder.path("/external/kakao/search")
@@ -44,9 +65,19 @@ public class ExternalRestControllerTests {
 	}
 	
 	@Test
+	public void isNaverPlaceApiBadRequest() {
+		webTestClient.get()
+		.uri(uriBuilder -> uriBuilder.path("/external/naver/search")
+				.queryParam("display", 5)
+				.build())
+		.exchange()
+		.expectStatus().isBadRequest();
+	}
+	
+	@Test
 	public void isNaverPlaceApiSuccess() {
 		webTestClient.get()
-		.uri(uriBuilder -> uriBuilder.path("/external/kakao/search")
+		.uri(uriBuilder -> uriBuilder.path("/external/naver/search")
 				.queryParam("query", "갈비집")
 				.queryParam("display", 5)
 				.build())

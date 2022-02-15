@@ -13,8 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ObjectMapperUtil {
-	private static ObjectMapper mapper = new ObjectMapper()
-			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+	private static ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	
 	public static MultiValueMap<String, String> parseMap(Object object) {
 		try {
@@ -24,7 +23,7 @@ public class ObjectMapperUtil {
             
             return params;
         } catch (Exception e) {
-            log.error("Object param error {}, {}", object, e);
+            log.error("Object parsing error {}, {}", object, e.getLocalizedMessage());
             return null;
         }
 	}
