@@ -9,6 +9,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import com.api.model.kakao.KakaoPlaceApiResponse;
 import com.api.model.naver.NaverPlaceApiResponse;
+import com.api.service.ApiService;
 import com.api.service.KakaoApiService;
 import com.api.service.NaverApiService;
 
@@ -20,6 +21,9 @@ import com.api.service.NaverApiService;
  */
 @WebFluxTest
 public class ExternalRestControllerTests {
+	
+	@MockBean
+	private ApiService apiService;
 	
 	@MockBean
 	private KakaoApiService kakaoApiService;

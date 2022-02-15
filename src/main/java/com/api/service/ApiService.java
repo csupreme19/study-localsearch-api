@@ -1,7 +1,9 @@
 package com.api.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.MultiValueMap;
 
+import com.api.model.PlaceApiRequest;
 import com.api.model.PlaceApiResponse;
 
 /**
@@ -16,6 +18,6 @@ public interface ApiService {
 	/**
 	 * 장소 검색 API 호출
 	 */
-	public PlaceApiResponse getPlaces();
+	public PlaceApiResponse getPlaces(MultiValueMap<String, String> header, PlaceApiRequest request);
 
 }

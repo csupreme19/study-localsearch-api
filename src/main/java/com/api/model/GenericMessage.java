@@ -13,6 +13,11 @@ import lombok.Data;
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class GenericMessage {
+	public GenericMessage() {
+		this.code = "200";
+		this.message = "Ok";
+	}
+	
 	String code;
 	transient String message;
 	Object result;
