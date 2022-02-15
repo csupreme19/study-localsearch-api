@@ -35,6 +35,7 @@ import reactor.core.publisher.Mono;
 public class ApiServiceImpl implements ApiService {
 
 	private static final String addressRegex = RegexPatterns.ADDRESS.getPattern();
+	private static final String htmlTagRegex = RegexPatterns.HTML_TAG.getPattern();
 
 	@Autowired
 	KakaoApiService kakaoService;
@@ -65,27 +66,38 @@ public class ApiServiceImpl implements ApiService {
 		for(DocumentInfo kakaoItem : kakaoResult.getDocuments()) {
 			String kakaoAddress = kakaoItem.getAddressName();	// 카카오 동주소
 			String kakaoRoadAddress = kakaoItem.getRoadAddressName();	// 카카오 도로명주소
+			String kakaoName = kakaoItem.getPlaceName();	// 카카오 장소명
 
-			// 주소값이 없거나 패턴이 모두 맞지 않으면 무효
+			// 주소값이 없거나 패턴이 맞지 않으면 무효
 			if(!Pattern.matches(addressRegex, kakaoAddress) && !Pattern.matches(addressRegex, kakaoRoadAddress)) continue;
-			if(!Pattern.matches(addressRegex, kakaoAddress)) kakaoItem.setAddressName("");
-			if(!Pattern.matches(addressRegex, kakaoRoadAddress)) kakaoItem.setRoadAddressName("");
+			if(!Pattern.matches(addressRegex, kakaoAddress)) kakaoAddress = "";
+			if(!Pattern.matches(addressRegex, kakaoRoadAddress)) kakaoRoadAddress = "";
 
 			for(ItemInfo naverItem : naverResult.getItems()) {
 				String naverAddress = naverItem.getAddress();	// 네이버 동주소
 				String naverRoadAddress = naverItem.getRoadAddress();	// 네이버 도로명주소
+				String naverName = naverItem.getTitle();	// 네이버 장소명
+				// HTML 태그 제거
+				if(!ObjectUtils.isEmpty(naverName)) naverName = naverName.replaceAll(htmlTagRegex, "");
 
-				// 주소값이 없거나 패턴이 모두 맞지 않으면 무효
-				if(!Pattern.matches(addressRegex, kakaoAddress) && !Pattern.matches(addressRegex, kakaoRoadAddress)) continue;
-				if(!Pattern.matches(addressRegex, kakaoAddress)) kakaoItem.setAddressName("");
-				if(!Pattern.matches(addressRegex, kakaoRoadAddress)) kakaoItem.setRoadAddressName("");
-
+				// 주소값이 없거나 패턴이 맞지 않으면 무효
+				if(!Pattern.matches(addressRegex, naverAddress) && !Pattern.matches(addressRegex, naverRoadAddress)) continue;
+				if(!Pattern.matches(addressRegex, naverAddress)) naverAddress = "";
+				if(!Pattern.matches(addressRegex, naverRoadAddress)) naverRoadAddress = "";
+				
+				int maxNameLen =  Math.max(kakaoName.length(), naverName.length());
 				int maxAddressLen =  Math.max(kakaoAddress.length(), naverAddress.length());
 				int maxRoadAddressLen =  Math.max(kakaoRoadAddress.length(), naverRoadAddress.length());
 
+				int nameDistance = maxNameLen;
 				int addressDistance = maxAddressLen;
 				int roadAddressDistance = maxRoadAddressLen;
 
+				// 이름 비교
+				if(!ObjectUtils.isEmpty(kakaoName) && !ObjectUtils.isEmpty(naverName)) {
+					nameDistance = AlgorithmUtils.levinshteinDistance(StringUtils.trimAllWhitespace(kakaoName), StringUtils.trimAllWhitespace(naverName));
+				}
+				
 				// 동주소 비교
 				if(!ObjectUtils.isEmpty(kakaoAddress) && !ObjectUtils.isEmpty(naverAddress)) {
 					addressDistance = AlgorithmUtils.levinshteinDistance(StringUtils.trimAllWhitespace(kakaoAddress), StringUtils.trimAllWhitespace(naverAddress));
@@ -95,10 +107,15 @@ public class ApiServiceImpl implements ApiService {
 					roadAddressDistance = AlgorithmUtils.levinshteinDistance(StringUtils.trimAllWhitespace(kakaoRoadAddress), StringUtils.trimAllWhitespace(naverRoadAddress));
 				}
 
-				// 동주소나 도로명 주소의 문자열 차이가 30%이하일 때 동일하다고 가정
-				if(((double)addressDistance / (double)maxAddressLen) <= 0.3
-						|| ((double)roadAddressDistance / (double)maxRoadAddressLen) <= 0.3) {
-					// 모든 정보는 카카오 기준
+				// 문자열 차이가 아래와 같을때 같다고 가정한다.
+				// 1. 이름: 30%이하
+				// 2. 주소: 30%이하
+				double namePercentage = ((double)nameDistance / (double)maxNameLen); 
+				double addressPercentage = ((double)addressDistance / (double)maxAddressLen);
+				double roadAddressPercentage = ((double)roadAddressDistance / (double)maxRoadAddressLen);
+				if(namePercentage <= 0.3 
+						&& (addressPercentage <= 0.3 || roadAddressPercentage <= 0.3)) {
+					// 공통일때 정보는 카카오 기준으로 작성
 					PlaceInfo place = new PlaceInfo();
 					place.setAddress(kakaoAddress);
 					place.setCategory(kakaoItem.getCategoryName());
