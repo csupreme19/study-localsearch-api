@@ -1,5 +1,8 @@
 server:
   port: 8080
+  error:
+    whitelabel:
+      enabled: false
 
 spring:
   profiles:
@@ -23,9 +26,10 @@ spring:
     defer-datasource-initialization: true
     hibernate:
       ddl-auto: create-drop
-   
-  data:
-    rest:
-      base-path: /api/v1
-      default-page-size: 10
-      max-page-size: 10
+
+# 404에러 처리를 위한 설정      
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
