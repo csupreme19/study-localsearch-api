@@ -1,10 +1,14 @@
 package com.api.service.impl;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -66,14 +70,12 @@ public class ApiServiceImpl implements ApiService {
 		kakaoRequest.setSize("5");
 		MultiValueMap<String, String> kakaoParams = ObjectMapperUtil.parseMap(kakaoRequest);
 		Mono<KakaoPlaceApiResponse> kakaoResponse = WebClientUtil.get(ApiHosts.API_SERVER.getUrl()+ApiEndpoints.KAKAO_SEARCH, header, kakaoParams).bodyToMono(KakaoPlaceApiResponse.class);;
-//		Mono<KakaoPlaceApiResponse> kakaoResponse = kakaoService.getKakaoPlaces(header, kakaoRequest);
 
 		NaverPlaceApiRequest naverRequest = new NaverPlaceApiRequest();
 		naverRequest.setQuery(query);
 		naverRequest.setDisplay(5);
 		MultiValueMap<String, String> naverParams = ObjectMapperUtil.parseMap(naverRequest);
 		Mono<NaverPlaceApiResponse> naverResponse = WebClientUtil.get(ApiHosts.API_SERVER.getUrl()+ApiEndpoints.NAVER_SEARCH, header, naverParams).bodyToMono(NaverPlaceApiResponse.class);;
-//		Mono<NaverPlaceApiResponse> naverResponse = naverService.getNaverPlaces(header, naverRequest);
 
 		KakaoPlaceApiResponse kakaoResult = kakaoResponse.block();
 		NaverPlaceApiResponse naverResult = naverResponse.block();
@@ -192,13 +194,42 @@ public class ApiServiceImpl implements ApiService {
 
 	@Transactional
 	@Override
-	public TrendApiResponse getTrends(MultiValueMap<String, String> header) {
+	public TrendApiResponse getTrendsQuery(MultiValueMap<String, String> header) {
 		List<TrendInfo> trends = new ArrayList<>();
 		List<SearchCount> searchCounts = searchHistoryRepository.getAllSearchHistory();
-		for(SearchCount sc : searchCounts) {
-			TrendInfo trend = new TrendInfo(sc.getKeyword(), sc.getCount());
+		for(SearchCount item : searchCounts) {
+			TrendInfo trend = new TrendInfo(item.getKeyword(), item.getCount());
 			trends.add(trend);
 		}
+		
+		TrendApiResponse response = new TrendApiResponse();
+		response.setTrends(trends);
+		
+		return response;
+	}
+
+
+	@Transactional
+	@Override
+	public TrendApiResponse getTrends(MultiValueMap<String, String> header) {
+		List<TrendInfo> trends = new ArrayList<>();
+		List<SearchHistoryInfo> searchHistoryInfos = searchHistoryRepository.findAll();
+		Map<String, Long> countMap = new HashMap<>();
+		
+		searchHistoryInfos.forEach(item -> {
+			String keyword = item.getKeyword();
+			Long count = countMap.containsKey(keyword) ? countMap.get(keyword)+1 : 1;
+			countMap.put(keyword, count);
+		});
+		
+		// 검색 횟수 확인
+		for(String key : countMap.keySet()) {
+			TrendInfo trend = new TrendInfo(key, countMap.get(key));
+			trends.add(trend);
+		}
+		
+		// 역순 정렬
+		trends = trends.stream().sorted(Comparator.comparingLong(TrendInfo::getCount).reversed()).collect(Collectors.toList());
 		
 		TrendApiResponse response = new TrendApiResponse();
 		response.setTrends(trends);

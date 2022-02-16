@@ -23,7 +23,12 @@ public interface ApiService {
 
 	
 	/**
-	 * 인기 검색 키워드 API
+	 * 인기 검색 키워드 API (쿼리 이용 로직 처리)
+	 */
+	public TrendApiResponse getTrendsQuery(MultiValueMap<String, String> header);
+	
+	/**
+	 * 인기 검색 키워드 API (서버 이용 로직 처리)
 	 */
 	public TrendApiResponse getTrends(MultiValueMap<String, String> header);
 }

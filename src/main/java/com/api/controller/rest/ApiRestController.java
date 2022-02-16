@@ -1,21 +1,14 @@
 package com.api.controller.rest;
 
-import java.util.Map;
-
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.api.model.GenericMessage;
@@ -49,7 +42,7 @@ public class ApiRestController {
 	}
 	
 	/**
-	 * 검색 키워드 목록 API
+	 * 검색 키워드 목록 API(서버 로직)
 	 * 
 	 * 사용자들이 많이 검색한 순서대로 10개의 검색 키워드 목록
 	 */
@@ -57,18 +50,8 @@ public class ApiRestController {
 	public ResponseEntity<?> getTrends(@RequestHeader MultiValueMap<String, String> header) {
 		GenericMessage msg = new GenericMessage();
 		msg.setResult(apiService.getTrends(header));
+//		msg.setResult(apiService.getTrendsQuery(header));
 		return new ResponseEntity<>(msg, HttpStatus.OK);
-	}
-	
-	// 테스트
-	@GetMapping(path = "/test/{id}")
-	public ResponseEntity<?> getTest(@PathVariable String id, @RequestParam String param1, @RequestParam String param2) {	
-		return new ResponseEntity<>(HttpStatus.OK);
-	}
-	
-	@PostMapping(path = "/test/{id}", consumes= MediaType.APPLICATION_JSON_VALUE, produces= MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<?> postTest(@PathVariable String id, @RequestBody Map<String, String> body) {
-		return new ResponseEntity<>("{\"key\": \"value\"}", HttpStatus.OK);
 	}
 	
 }

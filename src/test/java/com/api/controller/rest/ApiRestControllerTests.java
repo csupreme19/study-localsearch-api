@@ -47,7 +47,7 @@ public class ApiRestControllerTests {
 	@Test
 	public void isPlaceApiBadRequest() {
 		webTestClient.get()
-		.uri(uriBuilder -> uriBuilder.path("/external/kakao/search")
+		.uri(uriBuilder -> uriBuilder.path("/api/v1/places")
 				.build())
 		.exchange()
 		.expectStatus().isBadRequest();
@@ -56,8 +56,19 @@ public class ApiRestControllerTests {
 	@Test
 	public void isPlaceApiSuccess() {
 		webTestClient.get()
-		.uri(uriBuilder -> uriBuilder.path("/external/kakao/search")
+		.uri(uriBuilder -> uriBuilder.path("/api/v1/places")
 				.queryParam("query", "곱창")
+				.build())
+		.exchange()
+		.expectStatus().isOk()
+		.expectHeader().contentType(MediaType.APPLICATION_JSON)
+		.expectBody(PlaceApiResponse.class);
+	}
+	
+	@Test
+	public void isTrendApiSuccess() {
+		webTestClient.get()
+		.uri(uriBuilder -> uriBuilder.path("/api/v1/trends")
 				.build())
 		.exchange()
 		.expectStatus().isOk()

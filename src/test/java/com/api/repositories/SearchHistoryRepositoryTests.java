@@ -43,7 +43,6 @@ public class SearchHistoryRepositoryTests {
 	@Order(2)
 	public void read() {
 		List<SearchHistoryInfo> result = searchHistoryRepository.findAll();
-//		result.forEach(item -> log.info(item.toString()));
 		assertTrue(!ObjectUtils.isEmpty(result));
 	}
 	
@@ -73,8 +72,6 @@ public class SearchHistoryRepositoryTests {
 	@Test
 	public void getSearchHistory() {
 		List<SearchCount> result = searchHistoryRepository.getAllSearchHistory();
-//		result.forEach(item -> SearchHistoryInfo.builder());
-//		result.forEach(item -> log.info(item.toString()));
 		assertTrue(!ObjectUtils.isEmpty(result));
 	}
 }
