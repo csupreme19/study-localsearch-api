@@ -21,6 +21,8 @@ public class ApiServiceTests {
 			, "서울특별시 성동구 성수동1가 668-21"
 			, "경기 수원시 팔달구 장다리로 282"
 			, "경기도 수원시 팔달구 장다리로 282 의성빌딩"			
+			, "서울특별시 중구 세종대로 124 프레스센터 2층"
+			, "인천광역시 중구 은하수로 1 큰빌딩 작은관 더작은방 구석으로 와서 안녕해주세요"
 			};
 	
 	private String addressPattern = RegexPatterns.ADDRESS.getPattern();
