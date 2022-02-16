@@ -15,7 +15,7 @@ import lombok.Data;
 public class GenericMessage {
 	public GenericMessage() {
 		this.code = "200";
-		this.message = "Ok";
+		this.message = "OK";
 	}
 	
 	String code;
