@@ -19,6 +19,7 @@ import org.springframework.util.StringUtils;
 
 import com.api.constants.ApiEndpoints;
 import com.api.constants.ApiHosts;
+import com.api.constants.ApiParameters;
 import com.api.constants.RegexPatterns;
 import com.api.model.PlaceApiRequest;
 import com.api.model.PlaceApiResponse;
@@ -64,18 +65,20 @@ public class ApiServiceImpl implements ApiService {
 	@Transactional
 	@Override
 	public PlaceApiResponse getPlaces(MultiValueMap<String, String> header, PlaceApiRequest request) {
-		KakaoPlaceApiRequest kakaoRequest = new KakaoPlaceApiRequest();
 		String query = request.getQuery();
-		kakaoRequest.setQuery(query);
-		kakaoRequest.setSize("5");
-		MultiValueMap<String, String> kakaoParams = ObjectMapperUtil.parseMap(kakaoRequest);
-		Mono<KakaoPlaceApiResponse> kakaoResponse = WebClientUtil.get(ApiHosts.API_SERVER.getUrl()+ApiEndpoints.KAKAO_SEARCH, header, kakaoParams).bodyToMono(KakaoPlaceApiResponse.class);;
+		KakaoPlaceApiRequest kakaoRequest = KakaoPlaceApiRequest.builder()
+				.query(query)
+				.size(ApiParameters.KAKAO_SEARCH_SIZE)
+				.build();
+		Mono<KakaoPlaceApiResponse> kakaoResponse = WebClientUtil.get(ApiHosts.API_SERVER.getUrl()+ApiEndpoints.KAKAO_SEARCH, header, ObjectMapperUtil.parseMap(kakaoRequest))
+				.bodyToMono(KakaoPlaceApiResponse.class);;
 
-		NaverPlaceApiRequest naverRequest = new NaverPlaceApiRequest();
-		naverRequest.setQuery(query);
-		naverRequest.setDisplay(5);
-		MultiValueMap<String, String> naverParams = ObjectMapperUtil.parseMap(naverRequest);
-		Mono<NaverPlaceApiResponse> naverResponse = WebClientUtil.get(ApiHosts.API_SERVER.getUrl()+ApiEndpoints.NAVER_SEARCH, header, naverParams).bodyToMono(NaverPlaceApiResponse.class);;
+		NaverPlaceApiRequest naverRequest = NaverPlaceApiRequest.builder()
+				.query(query)
+				.display(ApiParameters.NAVER_SEARCH_DISPLAY)
+				.build();
+		Mono<NaverPlaceApiResponse> naverResponse = WebClientUtil.get(ApiHosts.API_SERVER.getUrl()+ApiEndpoints.NAVER_SEARCH, header, ObjectMapperUtil.parseMap(naverRequest))
+				.bodyToMono(NaverPlaceApiResponse.class);;
 
 		KakaoPlaceApiResponse kakaoResult = kakaoResponse.block();
 		NaverPlaceApiResponse naverResult = naverResponse.block();
@@ -97,56 +100,31 @@ public class ApiServiceImpl implements ApiService {
 				String naverAddress = naverItem.getAddress();
 				String naverRoadAddress = naverItem.getRoadAddress();
 				String naverName = naverItem.getTitle();
+				
 				// HTML 태그 제거
 				if(!ObjectUtils.isEmpty(naverName)) naverName = naverName.replaceAll(htmlTagRegex, "");
 
 				if(!Pattern.matches(addressRegex, naverAddress) && !Pattern.matches(addressRegex, naverRoadAddress)) continue;
 				if(!Pattern.matches(addressRegex, naverAddress)) naverAddress = "";
 				if(!Pattern.matches(addressRegex, naverRoadAddress)) naverRoadAddress = "";
-				
-				int maxNameLen =  Math.max(kakaoName.length(), naverName.length());
-				int maxAddressLen =  Math.max(kakaoAddress.length(), naverAddress.length());
-				int maxRoadAddressLen =  Math.max(kakaoRoadAddress.length(), naverRoadAddress.length());
 
-				int nameDistance = maxNameLen;
-				int addressDistance = maxAddressLen;
-				int roadAddressDistance = maxRoadAddressLen;
-
-				// 이름 비교
-				if(!ObjectUtils.isEmpty(kakaoName) && !ObjectUtils.isEmpty(naverName)) {
-					nameDistance = AlgorithmUtils.levinshteinDistance(StringUtils.trimAllWhitespace(kakaoName), StringUtils.trimAllWhitespace(naverName));
-				}
-				
-				// 동주소 비교
-				if(!ObjectUtils.isEmpty(kakaoAddress) && !ObjectUtils.isEmpty(naverAddress)) {
-					addressDistance = AlgorithmUtils.levinshteinDistance(StringUtils.trimAllWhitespace(kakaoAddress), StringUtils.trimAllWhitespace(naverAddress));
-				}
-				// 도로명주소 비교
-				if(!ObjectUtils.isEmpty(kakaoRoadAddress) && !ObjectUtils.isEmpty(naverRoadAddress)) {
-					roadAddressDistance = AlgorithmUtils.levinshteinDistance(StringUtils.trimAllWhitespace(kakaoRoadAddress), StringUtils.trimAllWhitespace(naverRoadAddress));
-				}
-
-				// 문자열 차이가 아래와 같을때 같다고 가정한다.
-				// 1. 이름: 30%이하
-				// 2. 주소: 30%이하
-				double namePercentage = ((double)nameDistance / (double)maxNameLen); 
-				double addressPercentage = ((double)addressDistance / (double)maxAddressLen);
-				double roadAddressPercentage = ((double)roadAddressDistance / (double)maxRoadAddressLen);
-				if(namePercentage <= 0.3 
-						&& (addressPercentage <= 0.3 || roadAddressPercentage <= 0.3)) {
+				// 같은 장소인지 검사
+				if(isSameString(kakaoName, naverName)
+						&& (isSameString(kakaoAddress, naverAddress) || isSameString(kakaoRoadAddress, naverRoadAddress))) {
 					// 공통일때 정보는 카카오 기준으로 작성
-					PlaceInfo place = new PlaceInfo();
-					place.setAddress(kakaoAddress);
-					place.setCategory(kakaoItem.getCategoryName());
-					place.setName(kakaoItem.getPlaceName());
-					place.setPhone(kakaoItem.getPhone());
-					place.setRoadAddress(kakaoRoadAddress);
-					place.setUrl(kakaoItem.getPlaceUrl());
+					PlaceInfo place = PlaceInfo.builder()
+							.address(kakaoAddress)
+							.category(kakaoItem.getCategoryName())
+							.name(kakaoName)
+							.phone(kakaoItem.getPhone())
+							.roadAddress(kakaoRoadAddress)
+							.url(kakaoItem.getPlaceUrl())
+							.build();
 					places.add(place);
 					
-					log.info("공통 음식점: {}", place.toString());
+					log.info("공통 장소: {}", place.toString());
 					
-					// 이미 검색되었는지는 해시테이블에 저장하여 사용
+					// 이미 검색되었는지 해시테이블에 저장
 					kakaoSet.add(kakaoItem.getPlaceName());
 					naverSet.add(naverItem.getTitle());
 				}
@@ -156,26 +134,28 @@ public class ApiServiceImpl implements ApiService {
 		// 공통이 아닌 카카오 조회 결과
 		for(DocumentInfo kakaoItem : kakaoResult.getDocuments()) {
 			if(kakaoSet.contains(kakaoItem.getPlaceName())) continue;
-			PlaceInfo place = new PlaceInfo();
-			place.setAddress(kakaoItem.getAddressName());
-			place.setCategory(kakaoItem.getCategoryName());
-			place.setName(kakaoItem.getPlaceName());
-			place.setPhone(kakaoItem.getPhone());
-			place.setRoadAddress(kakaoItem.getRoadAddressName());
-			place.setUrl(kakaoItem.getPlaceUrl());
+			PlaceInfo place = PlaceInfo.builder()
+					.address(kakaoItem.getAddressName())
+					.category(kakaoItem.getCategoryName())
+					.name(kakaoItem.getPlaceName())
+					.phone(kakaoItem.getPhone())
+					.roadAddress(kakaoItem.getRoadAddressName())
+					.url(kakaoItem.getPlaceUrl())
+					.build();
 			places.add(place);
 		}
 		
 		// 공통이 아닌 네이버 조회 결과
 		for(ItemInfo naverItem : naverResult.getItems()) {
 			if(naverSet.contains(naverItem.getTitle())) continue;
-			PlaceInfo place = new PlaceInfo();
-			place.setAddress(naverItem.getAddress());
-			place.setCategory(naverItem.getCategory());
-			place.setName(naverItem.getTitle());
-			place.setPhone(naverItem.getTelephone());
-			place.setRoadAddress(naverItem.getRoadAddress());
-			place.setUrl(naverItem.getLink());
+			PlaceInfo place = PlaceInfo.builder()
+					.address(naverItem.getAddress())
+					.category(naverItem.getCategory())
+					.name(naverItem.getTitle())
+					.phone(naverItem.getTelephone())
+					.roadAddress(naverItem.getRoadAddress())
+					.url(naverItem.getLink())
+					.build();
 			places.add(place);
 		}
 		
@@ -189,6 +169,21 @@ public class ApiServiceImpl implements ApiService {
 		response.setPlaces(places);
 
 		return response;
+	}
+	
+	/**
+	 * 문자열 차이를 비교해서 같은지 검사한다.
+	 * 조건: 문자열 차이가 30% 이하
+	 */
+	private boolean isSameString(String str1, String str2) {
+		int length =  Math.max(str1.length(), str2.length());
+		int distance = length;
+
+		if(!ObjectUtils.isEmpty(str1) && !ObjectUtils.isEmpty(str2)) {
+			distance = AlgorithmUtils.levinshteinDistance(StringUtils.trimAllWhitespace(str1), StringUtils.trimAllWhitespace(str2));
+		}
+		double namePercentage = ((double)distance / (double)length);
+		return namePercentage <= 0.3;
 	}
 
 
@@ -229,7 +224,9 @@ public class ApiServiceImpl implements ApiService {
 		}
 		
 		// 역순 정렬
-		trends = trends.stream().sorted(Comparator.comparingLong(TrendInfo::getCount).reversed()).collect(Collectors.toList());
+		trends = trends.stream()
+				.sorted(Comparator.comparingLong(TrendInfo::getCount).reversed())
+				.collect(Collectors.toList());
 		
 		TrendApiResponse response = new TrendApiResponse();
 		response.setTrends(trends);
