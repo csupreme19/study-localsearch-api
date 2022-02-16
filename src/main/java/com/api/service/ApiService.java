@@ -5,6 +5,7 @@ import org.springframework.util.MultiValueMap;
 
 import com.api.model.PlaceApiRequest;
 import com.api.model.PlaceApiResponse;
+import com.api.model.TrendApiResponse;
 
 /**
  * 장소 검색 API 서비스
@@ -16,8 +17,13 @@ import com.api.model.PlaceApiResponse;
 public interface ApiService {
 	
 	/**
-	 * 장소 검색 API 호출
+	 * 장소 검색 API
 	 */
 	public PlaceApiResponse getPlaces(MultiValueMap<String, String> header, PlaceApiRequest request);
 
+	
+	/**
+	 * 인기 검색 키워드 API
+	 */
+	public TrendApiResponse getTrends(MultiValueMap<String, String> header);
 }

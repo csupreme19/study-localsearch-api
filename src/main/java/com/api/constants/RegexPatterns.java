@@ -10,7 +10,7 @@ import lombok.Getter;
  */
 @Getter
 public enum RegexPatterns {
-	ADDRESS("([가-힣 ]+)+(([가-힣\\d\\-\\.]+(읍|동|가|로|길)\\s)+[\\d\\-]+( +|)(|[가-힣]+)+)")
+	ADDRESS("([가-힣 ]+)+([가-힣\\d\\-\\.]+(읍|동|가|로|길)\\s)+[\\d\\-]+(.+|)")
 	, HTML_TAG("(<([^>]+)>)");
 
 	private String pattern;

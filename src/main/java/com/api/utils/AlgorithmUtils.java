@@ -1,7 +1,5 @@
 package com.api.utils;
 
-import org.springframework.stereotype.Component;
-
 /**
  * 알고리즘 코드를 사용하기 위한 유틸리티
  * 
@@ -9,11 +7,11 @@ import org.springframework.stereotype.Component;
  * @since 2022.02.15
  */
 
-@Component
 public class AlgorithmUtils {
 
-	// 레빈슈타인 거리 알고리즘
+	// 레빈슈타인 거리 알고리즘 O(M*N)
 	// 두 문자열의 유사도를 확인한다.
+	// O(M*N)
 	public static int levinshteinDistance(String str1, String str2) {
 		str1 = "-"+str1;
 		str2 = "-"+str2;

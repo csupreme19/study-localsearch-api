@@ -10,7 +10,8 @@ import lombok.Getter;
  */
 @Getter
 public enum ApiHosts {
-	KAKAO("https://dapi.kakao.com")
+	API_SERVER("http://localhost:8080")
+	, KAKAO("https://dapi.kakao.com")
 	, NAVER("https://openapi.naver.com");
 
 	private String url;

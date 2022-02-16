@@ -7,6 +7,9 @@ package com.api.constants;
  * @since 2022.02.12
  */
 public interface ApiEndpoints {
-	String KAKAO_LOCAL_SEARCH = "/v2/local/search/keyword.json";
-	String NAVER_LOCAL_SEARCH = "/v1/search/local.json";
+	String KAKAO_SEARCH = "/external/kakao/search";
+	String NAVER_SEARCH = "/external/naver/search";
+	
+	String OPEN_API_KAKAO_SEARCH = "/v2/local/search/keyword.json";
+	String OPEN_API_NAVER_SEARCH = "/v1/search/local.json";
 }

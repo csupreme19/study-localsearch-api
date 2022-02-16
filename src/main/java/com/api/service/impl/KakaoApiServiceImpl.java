@@ -32,7 +32,7 @@ public class KakaoApiServiceImpl implements KakaoApiService {
 	@Transactional
 	@Override
 	public Mono<KakaoPlaceApiResponse> getKakaoPlaces(MultiValueMap<String, String> header, KakaoPlaceApiRequest request) {
-		String url = ApiHosts.KAKAO.getUrl() + ApiEndpoints.KAKAO_LOCAL_SEARCH;
+		String url = ApiHosts.KAKAO.getUrl() + ApiEndpoints.OPEN_API_KAKAO_SEARCH;
 		CompanyInfo companyInfo = companyRepo.findOneByName(ApiHosts.KAKAO.name().toLowerCase());
 		ApiKeyInfo apiKeyInfo = companyInfo.getApiKey();
 		

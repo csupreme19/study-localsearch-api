@@ -8,24 +8,34 @@ import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
+import com.api.constants.ApiEndpoints;
+import com.api.constants.ApiHosts;
 import com.api.constants.RegexPatterns;
 import com.api.model.PlaceApiRequest;
 import com.api.model.PlaceApiResponse;
 import com.api.model.PlaceInfo;
+import com.api.model.SearchCount;
+import com.api.model.TrendApiResponse;
+import com.api.model.TrendInfo;
+import com.api.model.db.SearchHistoryInfo;
 import com.api.model.kakao.DocumentInfo;
 import com.api.model.kakao.KakaoPlaceApiRequest;
 import com.api.model.kakao.KakaoPlaceApiResponse;
 import com.api.model.naver.ItemInfo;
 import com.api.model.naver.NaverPlaceApiRequest;
 import com.api.model.naver.NaverPlaceApiResponse;
+import com.api.repositories.SearchHistoryRepository;
 import com.api.service.ApiService;
 import com.api.service.KakaoApiService;
 import com.api.service.NaverApiService;
 import com.api.utils.AlgorithmUtils;
+import com.api.utils.ObjectMapperUtil;
+import com.api.utils.WebClientUtil;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -38,23 +48,32 @@ public class ApiServiceImpl implements ApiService {
 	private static final String htmlTagRegex = RegexPatterns.HTML_TAG.getPattern();
 
 	@Autowired
+	SearchHistoryRepository searchHistoryRepository;
+	
+	@Autowired
 	KakaoApiService kakaoService;
 
 	@Autowired
 	NaverApiService naverService;
 
-
+	
+	@Transactional
 	@Override
 	public PlaceApiResponse getPlaces(MultiValueMap<String, String> header, PlaceApiRequest request) {
 		KakaoPlaceApiRequest kakaoRequest = new KakaoPlaceApiRequest();
-		kakaoRequest.setQuery(request.getQuery());
+		String query = request.getQuery();
+		kakaoRequest.setQuery(query);
 		kakaoRequest.setSize("5");
-		Mono<KakaoPlaceApiResponse> kakaoResponse = kakaoService.getKakaoPlaces(header, kakaoRequest);
+		MultiValueMap<String, String> kakaoParams = ObjectMapperUtil.parseMap(kakaoRequest);
+		Mono<KakaoPlaceApiResponse> kakaoResponse = WebClientUtil.get(ApiHosts.API_SERVER.getUrl()+ApiEndpoints.KAKAO_SEARCH, header, kakaoParams).bodyToMono(KakaoPlaceApiResponse.class);;
+//		Mono<KakaoPlaceApiResponse> kakaoResponse = kakaoService.getKakaoPlaces(header, kakaoRequest);
 
 		NaverPlaceApiRequest naverRequest = new NaverPlaceApiRequest();
-		naverRequest.setQuery(request.getQuery());
+		naverRequest.setQuery(query);
 		naverRequest.setDisplay(5);
-		Mono<NaverPlaceApiResponse> naverResponse = naverService.getNaverPlaces(header, naverRequest);
+		MultiValueMap<String, String> naverParams = ObjectMapperUtil.parseMap(naverRequest);
+		Mono<NaverPlaceApiResponse> naverResponse = WebClientUtil.get(ApiHosts.API_SERVER.getUrl()+ApiEndpoints.NAVER_SEARCH, header, naverParams).bodyToMono(NaverPlaceApiResponse.class);;
+//		Mono<NaverPlaceApiResponse> naverResponse = naverService.getNaverPlaces(header, naverRequest);
 
 		KakaoPlaceApiResponse kakaoResult = kakaoResponse.block();
 		NaverPlaceApiResponse naverResult = naverResponse.block();
@@ -64,23 +83,21 @@ public class ApiServiceImpl implements ApiService {
 		Set<String> naverSet = new HashSet<>();
 
 		for(DocumentInfo kakaoItem : kakaoResult.getDocuments()) {
-			String kakaoAddress = kakaoItem.getAddressName();	// 카카오 동주소
-			String kakaoRoadAddress = kakaoItem.getRoadAddressName();	// 카카오 도로명주소
-			String kakaoName = kakaoItem.getPlaceName();	// 카카오 장소명
+			String kakaoAddress = kakaoItem.getAddressName();
+			String kakaoRoadAddress = kakaoItem.getRoadAddressName();
+			String kakaoName = kakaoItem.getPlaceName();
 
-			// 주소값이 없거나 패턴이 맞지 않으면 무효
 			if(!Pattern.matches(addressRegex, kakaoAddress) && !Pattern.matches(addressRegex, kakaoRoadAddress)) continue;
 			if(!Pattern.matches(addressRegex, kakaoAddress)) kakaoAddress = "";
 			if(!Pattern.matches(addressRegex, kakaoRoadAddress)) kakaoRoadAddress = "";
 
 			for(ItemInfo naverItem : naverResult.getItems()) {
-				String naverAddress = naverItem.getAddress();	// 네이버 동주소
-				String naverRoadAddress = naverItem.getRoadAddress();	// 네이버 도로명주소
-				String naverName = naverItem.getTitle();	// 네이버 장소명
+				String naverAddress = naverItem.getAddress();
+				String naverRoadAddress = naverItem.getRoadAddress();
+				String naverName = naverItem.getTitle();
 				// HTML 태그 제거
 				if(!ObjectUtils.isEmpty(naverName)) naverName = naverName.replaceAll(htmlTagRegex, "");
 
-				// 주소값이 없거나 패턴이 맞지 않으면 무효
 				if(!Pattern.matches(addressRegex, naverAddress) && !Pattern.matches(addressRegex, naverRoadAddress)) continue;
 				if(!Pattern.matches(addressRegex, naverAddress)) naverAddress = "";
 				if(!Pattern.matches(addressRegex, naverRoadAddress)) naverRoadAddress = "";
@@ -159,10 +176,33 @@ public class ApiServiceImpl implements ApiService {
 			place.setUrl(naverItem.getLink());
 			places.add(place);
 		}
+		
+		SearchHistoryInfo searchHistory = SearchHistoryInfo.builder()
+				.keyword(query)
+				.build();
+		
+		searchHistoryRepository.save(searchHistory);
 
 		PlaceApiResponse response = new PlaceApiResponse();
 		response.setPlaces(places);
 
+		return response;
+	}
+
+
+	@Transactional
+	@Override
+	public TrendApiResponse getTrends(MultiValueMap<String, String> header) {
+		List<TrendInfo> trends = new ArrayList<>();
+		List<SearchCount> searchCounts = searchHistoryRepository.getAllSearchHistory();
+		for(SearchCount sc : searchCounts) {
+			TrendInfo trend = new TrendInfo(sc.getKeyword(), sc.getCount());
+			trends.add(trend);
+		}
+		
+		TrendApiResponse response = new TrendApiResponse();
+		response.setTrends(trends);
+		
 		return response;
 	}
 

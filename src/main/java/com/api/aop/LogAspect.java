@@ -17,8 +17,9 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.api.model.GenericMessage;
+
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
@@ -26,7 +27,7 @@ import reactor.core.publisher.Mono;
 public class LogAspect {
 
 	@Around("execution(* com.api.controller.rest.*.*(..))")
-	public Object log(ProceedingJoinPoint pjp) throws Throwable {
+	public Object logBlocking(ProceedingJoinPoint pjp) throws Throwable {
 		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
 		HttpHeaders headers = getHeaders(request);
 		String method = request.getMethod();
@@ -43,20 +44,18 @@ public class LogAspect {
 				, method, url
 				, headers);
 
-		Object result = (ResponseEntity<?>) pjp.proceed(pjp.getArgs());
+		Object result = pjp.proceed(pjp.getArgs());
 		
-		if(result instanceof Mono) {
-			return result;
-		}
-		ResponseEntity<?> response = null;
-		if(result instanceof ResponseEntity) {
-			response = (ResponseEntity<?>)result;
-		}
+		if(!(result instanceof ResponseEntity)) return result;
+		ResponseEntity<?> response = (ResponseEntity<?>)result;
 		Object object = ObjectUtils.isEmpty(response) ? null : response.getBody();
 		HttpStatus status = ObjectUtils.isEmpty(response) ? null : response.getStatusCode();
 		String body = ObjectUtils.isEmpty(object) ? "" : object.toString();
 		String duration = String.valueOf(System.currentTimeMillis() - start);
 		headers = ObjectUtils.isEmpty(response) ? null : response.getHeaders();
+		
+		body = object instanceof GenericMessage ? ((GenericMessage)object).getResult().toString() : body; 
+		
 		log.info("\n==================================================" 
 				+ "\nResponse: {}) {}"
 				+ "\nStatus  : {} {}"

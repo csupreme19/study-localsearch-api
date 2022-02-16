@@ -48,6 +48,18 @@ public class ApiRestController {
 		return new ResponseEntity<>(msg, HttpStatus.OK);
 	}
 	
+	/**
+	 * 검색 키워드 목록 API
+	 * 
+	 * 사용자들이 많이 검색한 순서대로 10개의 검색 키워드 목록
+	 */
+	@GetMapping(path = "/trends")
+	public ResponseEntity<?> getTrends(@RequestHeader MultiValueMap<String, String> header) {
+		GenericMessage msg = new GenericMessage();
+		msg.setResult(apiService.getTrends(header));
+		return new ResponseEntity<>(msg, HttpStatus.OK);
+	}
+	
 	// 테스트
 	@GetMapping(path = "/test/{id}")
 	public ResponseEntity<?> getTest(@PathVariable String id, @RequestParam String param1, @RequestParam String param2) {	

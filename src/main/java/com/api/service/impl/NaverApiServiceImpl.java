@@ -32,7 +32,7 @@ public class NaverApiServiceImpl implements NaverApiService {
 	@Transactional
 	@Override
 	public Mono<NaverPlaceApiResponse> getNaverPlaces(MultiValueMap<String, String> header, NaverPlaceApiRequest request) {
-		String url = ApiHosts.NAVER.getUrl() + ApiEndpoints.NAVER_LOCAL_SEARCH;
+		String url = ApiHosts.NAVER.getUrl() + ApiEndpoints.OPEN_API_NAVER_SEARCH;
 		CompanyInfo companyInfo = companyRepo.findOneByName(ApiHosts.NAVER.name().toLowerCase());
 		ApiKeyInfo apiKeyInfo = companyInfo.getApiKey();
 		
