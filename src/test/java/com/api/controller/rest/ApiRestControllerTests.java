@@ -54,6 +54,42 @@ public class ApiRestControllerTests {
 	}
 	
 	@Test
+	public void isPlaceApiPostMethodNotAllowed() {
+		webTestClient.post()
+		.uri(uriBuilder -> uriBuilder.path("/api/v1/places")
+				.build())
+		.exchange()
+		.expectStatus().is4xxClientError();
+	}
+	
+	@Test
+	public void isPlaceApiPutMethodNotAllowed() {
+		webTestClient.put()
+		.uri(uriBuilder -> uriBuilder.path("/api/v1/places")
+				.build())
+		.exchange()
+		.expectStatus().is4xxClientError();
+	}
+	
+	@Test
+	public void isPlaceApiDeleteMethodNotAllowed() {
+		webTestClient.delete()
+		.uri(uriBuilder -> uriBuilder.path("/api/v1/places")
+				.build())
+		.exchange()
+		.expectStatus().is4xxClientError();
+	}
+	
+	@Test
+	public void isPlaceApiPatchMethodNotAllowed() {
+		webTestClient.patch()
+		.uri(uriBuilder -> uriBuilder.path("/api/v1/places")
+				.build())
+		.exchange()
+		.expectStatus().is4xxClientError();
+	}
+
+	@Test
 	public void isPlaceApiSuccess() {
 		webTestClient.get()
 		.uri(uriBuilder -> uriBuilder.path("/api/v1/places")
@@ -74,6 +110,42 @@ public class ApiRestControllerTests {
 		.expectStatus().isOk()
 		.expectHeader().contentType(MediaType.APPLICATION_JSON)
 		.expectBody(PlaceApiResponse.class);
+	}
+	
+	@Test
+	public void isTrendApiPostMethodNotAllowed() {
+		webTestClient.post()
+		.uri(uriBuilder -> uriBuilder.path("/api/v1/trends")
+				.build())
+		.exchange()
+		.expectStatus().is4xxClientError();
+	}
+	
+	@Test
+	public void isTrendApiPutMethodNotAllowed() {
+		webTestClient.put()
+		.uri(uriBuilder -> uriBuilder.path("/api/v1/trends")
+				.build())
+		.exchange()
+		.expectStatus().is4xxClientError();
+	}
+	
+	@Test
+	public void isTrendApiDeleteMethodNotAllowed() {
+		webTestClient.delete()
+		.uri(uriBuilder -> uriBuilder.path("/api/v1/trends")
+				.build())
+		.exchange()
+		.expectStatus().is4xxClientError();
+	}
+	
+	@Test
+	public void isTrendApiPatchMethodNotAllowed() {
+		webTestClient.patch()
+		.uri(uriBuilder -> uriBuilder.path("/api/v1/trends")
+				.build())
+		.exchange()
+		.expectStatus().is4xxClientError();
 	}
 	
 }

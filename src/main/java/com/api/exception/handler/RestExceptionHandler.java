@@ -1,12 +1,15 @@
 package com.api.exception.handler;
 
 
+import java.util.Locale;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -38,17 +41,17 @@ public class RestExceptionHandler {
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public GenericMessage error400(BindException ex) {
 		log.error(ex.getLocalizedMessage());
-		GenericMessage message = new GenericMessage();
-		message.setCode(String.valueOf(HttpStatus.BAD_REQUEST.value()));
+		GenericMessage response = new GenericMessage();
+		response.setCode(String.valueOf(HttpStatus.BAD_REQUEST.value()));
 		StringBuilder sb = new StringBuilder();
 		for(ObjectError error : ex.getAllErrors()) {
 			if(sb.length() != 0) sb.append("\n");
 			String fieldName = ((FieldError) error).getField();
-			String errMsg = String.format(ex.getFieldError().getDefaultMessage(), fieldName);
-			sb.append(errMsg);
+			String message = String.format(ex.getFieldError().getDefaultMessage(), fieldName);
+			sb.append(message);
 		}
-		message.setMessage(sb.toString());
-		return message;
+		response.setMessage(sb.toString());
+		return response;
 	}
 	
 	/**
@@ -59,17 +62,17 @@ public class RestExceptionHandler {
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public GenericMessage error400(WebExchangeBindException ex) {
 		log.error(ex.getLocalizedMessage());
-		GenericMessage message = new GenericMessage();
-		message.setCode(String.valueOf(HttpStatus.BAD_REQUEST.value()));
+		GenericMessage response = new GenericMessage();
+		response.setCode(String.valueOf(HttpStatus.BAD_REQUEST.value()));
 		StringBuilder sb = new StringBuilder();
 		for(ObjectError error : ex.getAllErrors()) {
 			if(sb.length() != 0) sb.append("\n");
 			String fieldName = ((FieldError) error).getField();
-			String errMsg = String.format(ex.getFieldError().getDefaultMessage(), fieldName);
-			sb.append(errMsg);
+			String message = String.format(ex.getFieldError().getDefaultMessage(), fieldName);
+			sb.append(message);
 		}
-		message.setMessage(sb.toString());
-		return message;
+		response.setMessage(sb.toString());
+		return response;
 	}
 	
 	/**
@@ -80,10 +83,26 @@ public class RestExceptionHandler {
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	public GenericMessage error404(NoHandlerFoundException ex) {
 		log.error(ex.getLocalizedMessage());
-		GenericMessage message = new GenericMessage();
-		message.setCode(String.valueOf(HttpStatus.NOT_FOUND.value()));
-		message.setMessage(new StringBuilder().append(ex.getRequestURL()).append(" 주소를 찾을 수 없습니다.").toString());
-		return message;
+		GenericMessage response = new GenericMessage();
+		response.setCode(String.valueOf(HttpStatus.NOT_FOUND.value()));
+		String msg = messageSource.getMessage("error.not-found", new String[] {ex.getRequestURL().toString()}, Locale.getDefault());
+		response.setMessage(msg);
+		return response;
+	}
+	
+	/**
+	 * 405 예외 처리
+	 * HTTP STATUS: 405 METHOD NOT ALLOWED
+	 */
+	@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+	@ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+	public GenericMessage error405(HttpRequestMethodNotSupportedException ex) {
+		log.error(ex.getLocalizedMessage());
+		GenericMessage response = new GenericMessage();
+		response.setCode(String.valueOf(HttpStatus.METHOD_NOT_ALLOWED.value()));
+		String message = messageSource.getMessage("error.method-not-allowed", new String[] {ex.getMethod()}, Locale.getDefault());
+		response.setMessage(message);
+		return response;
 	}
 	
 	/**
@@ -94,10 +113,10 @@ public class RestExceptionHandler {
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	public GenericMessage error500(Exception ex) {
 		log.error(ex.getLocalizedMessage());
-		ex.printStackTrace();
-		GenericMessage message = new GenericMessage();
-		message.setCode(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-		message.setMessage("내부 서버 오류");
-		return message;
+		GenericMessage response = new GenericMessage();
+		response.setCode(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+		String message = messageSource.getMessage("error.internal-server-error", null, Locale.getDefault());
+		response.setMessage(message);
+		return response;
 	}
 }

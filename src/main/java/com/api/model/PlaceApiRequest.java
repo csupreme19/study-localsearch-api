@@ -9,6 +9,6 @@ import lombok.Data;
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PlaceApiRequest {
-	@NotNull(message = "{validation.message.notnull}")
+	@NotNull(message = "{validation.not-null}")
 	String query;
 }

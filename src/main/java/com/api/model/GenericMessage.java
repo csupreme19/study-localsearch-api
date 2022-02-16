@@ -19,6 +19,6 @@ public class GenericMessage {
 	}
 	
 	String code;
-	transient String message;
+	String message;
 	Object result;
 }
