@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
 public interface KakaoApiService {
 	
 	/**
-	 * 장소 검색 API 비동기 호출
+	 * 장소 검색 API
 	 */
 	public Mono<KakaoPlaceApiResponse> getKakaoPlaces(MultiValueMap<String, String> header, KakaoPlaceApiRequest request);
 }

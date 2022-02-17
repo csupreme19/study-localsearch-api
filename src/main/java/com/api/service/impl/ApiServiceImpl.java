@@ -2,10 +2,8 @@ package com.api.service.impl;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -24,7 +22,6 @@ import com.api.constants.RegexPatterns;
 import com.api.model.PlaceApiRequest;
 import com.api.model.PlaceApiResponse;
 import com.api.model.PlaceInfo;
-import com.api.model.SearchCount;
 import com.api.model.TrendApiResponse;
 import com.api.model.TrendInfo;
 import com.api.model.db.SearchHistoryInfo;
@@ -71,7 +68,8 @@ public class ApiServiceImpl implements ApiService {
 				.size(ApiParameters.KAKAO_SEARCH_SIZE)
 				.build();
 		Mono<KakaoPlaceApiResponse> kakaoResponse = WebClientUtil.get(ApiHosts.API_SERVER.getUrl()+ApiEndpoints.KAKAO_SEARCH, header, ObjectMapperUtil.parseMap(kakaoRequest))
-				.bodyToMono(KakaoPlaceApiResponse.class);;
+				.bodyToMono(KakaoPlaceApiResponse.class);
+		
 
 		NaverPlaceApiRequest naverRequest = NaverPlaceApiRequest.builder()
 				.query(query)
@@ -159,11 +157,8 @@ public class ApiServiceImpl implements ApiService {
 			places.add(place);
 		}
 		
-		SearchHistoryInfo searchHistory = SearchHistoryInfo.builder()
-				.keyword(query)
-				.build();
-		
-		searchHistoryRepository.save(searchHistory);
+		// 검색 수 업데이트
+		updateKeyword(query);
 
 		PlaceApiResponse response = new PlaceApiResponse();
 		response.setPlaces(places);
@@ -185,50 +180,44 @@ public class ApiServiceImpl implements ApiService {
 		double namePercentage = ((double)distance / (double)length);
 		return namePercentage <= 0.3;
 	}
-
-
+	
 	@Transactional
-	@Override
-	public TrendApiResponse getTrendsQuery(MultiValueMap<String, String> header) {
-		List<TrendInfo> trends = new ArrayList<>();
-		List<SearchCount> searchCounts = searchHistoryRepository.getAllSearchHistory();
-		for(SearchCount item : searchCounts) {
-			TrendInfo trend = new TrendInfo(item.getKeyword(), item.getCount());
-			trends.add(trend);
+	private void updateKeyword(String query) {
+		SearchHistoryInfo item = searchHistoryRepository.findOneByKeyword(query);
+		if(ObjectUtils.isEmpty(item)) {
+			item = searchHistoryRepository.save(SearchHistoryInfo.builder()
+			.keyword(query)
+			.count(0L)
+			.build());
 		}
-		
-		TrendApiResponse response = new TrendApiResponse();
-		response.setTrends(trends);
-		
-		return response;
+		SearchHistoryInfo update = SearchHistoryInfo.builder()
+				.keyword(item.getKeyword())
+				.count(item.getCount()+1)
+				.build();
+		update = searchHistoryRepository.save(update);
 	}
 
 
 	@Transactional
 	@Override
 	public TrendApiResponse getTrends(MultiValueMap<String, String> header) {
+		TrendApiResponse response = new TrendApiResponse();
 		List<TrendInfo> trends = new ArrayList<>();
 		List<SearchHistoryInfo> searchHistoryInfos = searchHistoryRepository.findAll();
-		Map<String, Long> countMap = new HashMap<>();
-		
-		searchHistoryInfos.forEach(item -> {
-			String keyword = item.getKeyword();
-			Long count = countMap.containsKey(keyword) ? countMap.get(keyword)+1 : 1;
-			countMap.put(keyword, count);
-		});
+		if(ObjectUtils.isEmpty(searchHistoryInfos)) return response;
 		
 		// 검색 횟수 확인
-		for(String key : countMap.keySet()) {
-			TrendInfo trend = new TrendInfo(key, countMap.get(key));
+		for(SearchHistoryInfo item : searchHistoryInfos) {
+			TrendInfo trend = new TrendInfo(item.getKeyword(), item.getCount());
 			trends.add(trend);
 		}
 		
 		// 역순 정렬
 		trends = trends.stream()
 				.sorted(Comparator.comparingLong(TrendInfo::getCount).reversed())
+				.limit(10)
 				.collect(Collectors.toList());
 		
-		TrendApiResponse response = new TrendApiResponse();
 		response.setTrends(trends);
 		
 		return response;

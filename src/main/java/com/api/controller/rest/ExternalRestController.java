@@ -40,8 +40,8 @@ public class ExternalRestController {
 	/**
 	 * 카카오 검색 API
 	 */
-	@GetMapping(path = "/kakao/search")
-	public Mono<KakaoPlaceApiResponse> getKakaoPlaces(@RequestHeader MultiValueMap<String, String> header, @Valid KakaoPlaceApiRequest request){
+	@GetMapping(path = "/kakao/places")
+	public Mono<?> getKakaoPlaces(@RequestHeader MultiValueMap<String, String> header, @Valid KakaoPlaceApiRequest request){
 		Mono<KakaoPlaceApiResponse> response = kakaoService.getKakaoPlaces(header, request);
 		return response;
 	}
@@ -49,8 +49,8 @@ public class ExternalRestController {
 	/**
 	 * 네이버 검색 API
 	 */
-	@GetMapping(path = "/naver/search")
-	public Mono<NaverPlaceApiResponse> getNaverPlaces(@RequestHeader MultiValueMap<String, String> header, @Valid NaverPlaceApiRequest request){
+	@GetMapping(path = "/naver/places")
+	public Mono<?> getNaverPlaces(@RequestHeader MultiValueMap<String, String> header, @Valid NaverPlaceApiRequest request){
 		Mono<NaverPlaceApiResponse> response = naverService.getNaverPlaces(header, request);
 		return response;
 	}

@@ -42,7 +42,7 @@ public class ApiRestController {
 	}
 	
 	/**
-	 * 검색 키워드 목록 API(서버 로직)
+	 * 검색 키워드 목록 API
 	 * 
 	 * 사용자들이 많이 검색한 순서대로 10개의 검색 키워드 목록
 	 */
@@ -50,7 +50,6 @@ public class ApiRestController {
 	public ResponseEntity<?> getTrends(@RequestHeader MultiValueMap<String, String> header) {
 		GenericMessage msg = new GenericMessage();
 		msg.setResult(apiService.getTrends(header));
-//		msg.setResult(apiService.getTrendsQuery(header));
 		return new ResponseEntity<>(msg, HttpStatus.OK);
 	}
 	
