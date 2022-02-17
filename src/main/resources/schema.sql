@@ -1,8 +1,8 @@
 DROP TABLE IF EXISTS search_history;
 
 CREATE TABLE search_history (
-	id LONG PRIMARY KEY AUTO_INCREMENT,
-	keyword VARCHAR,
+	keyword VARCHAR PRIMARY KEY,
+	count LONG,
 	created_at TIMESTAMP,
 	modified_at TIMESTAMP
 );

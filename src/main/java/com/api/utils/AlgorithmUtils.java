@@ -1,12 +1,14 @@
 package com.api.utils;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * 알고리즘 코드를 사용하기 위한 유틸리티
  * 
  * @author csupreme19
  * @since 2022.02.15
  */
-
+@Slf4j
 public class AlgorithmUtils {
 
 	// 레빈슈타인 거리 알고리즘 O(M*N)
@@ -39,9 +41,9 @@ public class AlgorithmUtils {
 	private static void print(int[][] distance) {
 		for(int i=0; i<distance.length; i++) {
 			for(int j=0; j<distance[0].length; j++) {
-				System.out.print(distance[i][j] + " ");
+				log.debug("{} ", distance[i][j]);
 			}
-			System.out.println();
+			log.debug("\n");
 		}
 	}
 }
