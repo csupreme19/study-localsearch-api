@@ -34,7 +34,7 @@ public class LogAspect {
 		String query = request.getQueryString();
 		String host = request.getServerName() + ":" + request.getServerPort();
 		String uri = request.getRequestURI();
-		String url = host + uri + "?" + query;
+		String url = ObjectUtils.isEmpty(query) ? host + uri + "?" + query : host + uri;
 		
 		long start = System.currentTimeMillis();
 		log.info("\n==================================================" 

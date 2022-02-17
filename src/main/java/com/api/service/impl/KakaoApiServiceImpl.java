@@ -1,5 +1,7 @@
 package com.api.service.impl;
 
+import javax.persistence.NoResultException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -34,7 +36,9 @@ public class KakaoApiServiceImpl implements KakaoApiService {
 	public Mono<KakaoPlaceApiResponse> getKakaoPlaces(MultiValueMap<String, String> header, KakaoPlaceApiRequest request) {
 		String url = ApiHosts.KAKAO.getUrl() + ApiEndpoints.OPEN_API_KAKAO_SEARCH;
 		CompanyInfo companyInfo = companyRepo.findOneByName(ApiHosts.KAKAO.name().toLowerCase());
+		if(ObjectUtils.isEmpty(companyInfo)) throw new NoResultException();
 		ApiKeyInfo apiKeyInfo = companyInfo.getApiKey();
+		if(ObjectUtils.isEmpty(apiKeyInfo)) throw new NoResultException();
 		
 		if(!ObjectUtils.isEmpty(header)) {
 			header = new LinkedMultiValueMap<>();

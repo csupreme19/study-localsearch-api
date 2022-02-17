@@ -41,6 +41,7 @@ public class RestExceptionHandler {
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public GenericMessage error400(BindException ex) {
 		log.error(ex.getLocalizedMessage());
+		ex.printStackTrace();
 		GenericMessage response = new GenericMessage();
 		response.setCode(String.valueOf(HttpStatus.BAD_REQUEST.value()));
 		StringBuilder sb = new StringBuilder();
@@ -62,6 +63,7 @@ public class RestExceptionHandler {
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public GenericMessage error400(WebExchangeBindException ex) {
 		log.error(ex.getLocalizedMessage());
+		ex.printStackTrace();
 		GenericMessage response = new GenericMessage();
 		response.setCode(String.valueOf(HttpStatus.BAD_REQUEST.value()));
 		StringBuilder sb = new StringBuilder();
@@ -83,6 +85,7 @@ public class RestExceptionHandler {
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	public GenericMessage error404(NoHandlerFoundException ex) {
 		log.error(ex.getLocalizedMessage());
+		ex.printStackTrace();
 		GenericMessage response = new GenericMessage();
 		response.setCode(String.valueOf(HttpStatus.NOT_FOUND.value()));
 		String msg = messageSource.getMessage("error.not-found", new String[] {ex.getRequestURL().toString()}, Locale.getDefault());
@@ -98,6 +101,7 @@ public class RestExceptionHandler {
 	@ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
 	public GenericMessage error405(HttpRequestMethodNotSupportedException ex) {
 		log.error(ex.getLocalizedMessage());
+		ex.printStackTrace();
 		GenericMessage response = new GenericMessage();
 		response.setCode(String.valueOf(HttpStatus.METHOD_NOT_ALLOWED.value()));
 		String message = messageSource.getMessage("error.method-not-allowed", new String[] {ex.getMethod()}, Locale.getDefault());
@@ -113,6 +117,7 @@ public class RestExceptionHandler {
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	public GenericMessage error500(Exception ex) {
 		log.error(ex.getLocalizedMessage());
+		ex.printStackTrace();
 		GenericMessage response = new GenericMessage();
 		response.setCode(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
 		String message = messageSource.getMessage("error.internal-server-error", null, Locale.getDefault());

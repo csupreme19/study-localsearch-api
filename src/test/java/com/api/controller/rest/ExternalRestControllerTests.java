@@ -7,6 +7,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import com.api.constants.ApiEndpoints;
 import com.api.model.kakao.KakaoPlaceApiResponse;
 import com.api.model.naver.NaverPlaceApiResponse;
 import com.api.service.ApiService;
@@ -48,7 +49,7 @@ public class ExternalRestControllerTests {
 	@Test
 	public void isKakaoPlaceApiBadRequest() {
 		webTestClient.get()
-		.uri(uriBuilder -> uriBuilder.path("/external/kakao/search")
+		.uri(uriBuilder -> uriBuilder.path(ApiEndpoints.KAKAO_SEARCH)
 				.queryParam("size", 5)
 				.build())
 		.exchange()
@@ -58,7 +59,7 @@ public class ExternalRestControllerTests {
 	@Test
 	public void isKakaoPlaceApiSuccess() {
 		webTestClient.get()
-		.uri(uriBuilder -> uriBuilder.path("/external/kakao/search")
+		.uri(uriBuilder -> uriBuilder.path(ApiEndpoints.KAKAO_SEARCH)
 				.queryParam("query", "갈비집")
 				.queryParam("size", 5)
 				.build())
@@ -71,7 +72,7 @@ public class ExternalRestControllerTests {
 	@Test
 	public void isNaverPlaceApiBadRequest() {
 		webTestClient.get()
-		.uri(uriBuilder -> uriBuilder.path("/external/naver/search")
+		.uri(uriBuilder -> uriBuilder.path(ApiEndpoints.NAVER_SEARCH)
 				.queryParam("display", 5)
 				.build())
 		.exchange()
@@ -81,7 +82,7 @@ public class ExternalRestControllerTests {
 	@Test
 	public void isNaverPlaceApiSuccess() {
 		webTestClient.get()
-		.uri(uriBuilder -> uriBuilder.path("/external/naver/search")
+		.uri(uriBuilder -> uriBuilder.path(ApiEndpoints.NAVER_SEARCH)
 				.queryParam("query", "갈비집")
 				.queryParam("display", 5)
 				.build())
